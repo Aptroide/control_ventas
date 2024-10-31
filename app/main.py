@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Body
 from typing import List
 from . import schemas
 from .database import get_db_connection, execute_query
@@ -54,27 +54,30 @@ def get_product_by_id(id_producto: int):
 def create_ventas(new_venta: schemas.Ventas):
 
     query = """
-    INSERT INTO minimarket.ventas (fecha, total) 
-    VALUES (%s, %s) RETURNING id_venta;
+    INSERT INTO minimarket.ventas (fecha, total, deuda) 
+    VALUES (%s, %s, %s) RETURNING id_venta;
     """
     venta_id = execute_query(query, 
-                            (new_venta.fecha, new_venta.total), 
+                            (new_venta.fecha, new_venta.total, new_venta.deuda), 
                             fetch="one")
     return venta_id
 
 # GET /ventas
 @app.get("/ventas", response_model=List[schemas.Ventas])
 def get_ventas():
-    query = "SELECT id_venta, fecha, total FROM minimarket.ventas"
-    ventas = execute_query(query, 
-                            (), 
-                            fetch="all")
+    query = """
+    SELECT id_venta, fecha, total, 
+           COALESCE(deuda, FALSE) AS deuda  -- Usa FALSE si deuda es NULL
+    FROM minimarket.ventas
+    """
+    ventas = execute_query(query, (), fetch="all")
     return ventas
+
 
 # GET /ventas/{id_venta}
 @app.get("/ventas/{id_venta}", response_model=schemas.Ventas)
 def get_ventas_by_id(id_venta: int):
-    query = "SELECT id_venta, fecha, total FROM minimarket.ventas WHERE id_venta = %s"
+    query = "SELECT * FROM minimarket.ventas WHERE id_venta = %s"
     venta = execute_query(query, 
                             (id_venta,), 
                             fetch="one")
@@ -121,6 +124,103 @@ def get_detalles_by_id(id_detalle: int):
                             detail=f"Product with id: {id_detalle} was not found")
     else:
         return detalle
+
+# -------- Deudas --------
+# GET /deudas
+@app.get("/deudas", response_model=List[schemas.Deudas])
+def get_deudas():
+    query = "SELECT * FROM minimarket.deudas"
+    deudas = execute_query(query, 
+                            (), 
+                            fetch="all")
+    return deudas
+
+# GET /deudas y id
+@app.get("/deudas/{id_deuda}")
+def consultar_estado_deuda(id_deuda: int):
+    # Obtener los detalles de la deuda y el estado de pago
+    query_deuda = """
+    SELECT nombre_deudor, monto_deuda, pagado
+    FROM minimarket.deudas
+    WHERE id_deuda = %s
+    """
+    deuda = execute_query(query_deuda, (id_deuda,), fetch="one")
+    
+    if not deuda:
+        raise HTTPException(status_code=404, detail="Deuda no encontrada")
+
+    # Calcular el total pagado hasta ahora
+    query_total_pagado = """
+    SELECT COALESCE(SUM(monto_pago), 0) AS total
+    FROM minimarket.pagos_parciales
+    WHERE id_deuda = %s
+    """
+    total_pagado = execute_query(query_total_pagado, (id_deuda,), fetch="one")
+    
+    total_pagado = total_pagado["total"]
+    deudav = deuda["monto_deuda"]
+
+    saldo_pendiente = deudav - total_pagado
+    
+    # Obtener todos los pagos parciales realizados
+    query_pagos_parciales = """
+    SELECT id_pago, monto_pago, fecha_pago
+    FROM minimarket.pagos_parciales
+    WHERE id_deuda = %s
+    ORDER BY fecha_pago
+    """
+    pagos_parciales = execute_query(query_pagos_parciales, (id_deuda,), fetch="all")
+    
+    return {
+        "nombre_deudor": deuda["nombre_deudor"],
+        "monto_deuda": deuda["monto_deuda"],
+        "pagado": deuda["pagado"],
+        "total_pagado": total_pagado,
+        "saldo_pendiente": saldo_pendiente,
+        "pagos_parciales": [
+            {"id_pago": pago["id_pago"], "monto_pago": pago["monto_pago"], "fecha_pago": pago["fecha_pago"]}
+            for pago in pagos_parciales
+        ]
+    }
+
+# -------- Pagos --------
+@app.post("/pago_parcial/{id_deuda}", status_code=status.HTTP_201_CREATED)
+def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas):
+    # Registrar el pago parcial en la tabla pagos_parciales
+    query_pago = """
+    INSERT INTO minimarket.pagos_parciales (id_deuda, monto_pago) 
+    VALUES (%s, %s) RETURNING id_pago;
+    """
+    pago_id = execute_query(query_pago, (id_deuda, monto_pago.monto_pago), fetch="one")
+    
+    # Calcular el monto total pagado hasta ahora para la deuda
+    query_total_pagado = """
+    SELECT COALESCE(SUM(monto_pago), 0) AS total
+    FROM minimarket.pagos_parciales
+    WHERE id_deuda = %s
+    """
+    total_pagado = execute_query(query_total_pagado, (id_deuda,), fetch="one")
+    total_pagado = total_pagado["total"]
+    # # Obtener el monto original de la deuda
+    query_deuda = "SELECT monto_deuda FROM minimarket.deudas WHERE id_deuda = %s"
+    monto_deuda = execute_query(query_deuda, (id_deuda,), fetch="one")
+    monto_deuda = monto_deuda["monto_deuda"]
+    
+    # Verificar si la deuda está completamente pagada
+    if total_pagado >= monto_deuda:
+        # Marcar la deuda como pagada y la venta como no deuda
+        query_update_deuda = "UPDATE minimarket.deudas SET pagado = %s WHERE id_deuda = %s"
+        query_update_venta = "UPDATE minimarket.ventas SET deuda = %s WHERE id_venta = %s"
+
+        query_id_venta = "SELECT id_venta FROM minimarket.deudas WHERE id_deuda = %s"
+        id_venta = execute_query(query_id_venta, (id_deuda,), fetch="one")
+
+        execute_query(query_update_deuda, (True, id_deuda,), fetch="None")
+        execute_query(query_update_venta, (False, id_venta["id_venta"],), fetch="None")
+
+        return {"id_pago": pago_id["id_pago"], "message": "Pago completo registrado exitosamente", "total_pagado": total_pagado}
+    else:
+        return {"id_pago": pago_id["id_pago"], "message": "Pago parcial registrado exitosamente", "total_pagado": total_pagado}
 
 
 # -------- Historial Legado --------

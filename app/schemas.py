@@ -13,6 +13,7 @@ class Ventas(BaseModel):
     id_venta: Optional[int] = None
     fecha: Optional[datetime] = datetime.now()
     total: float
+    deuda: Optional[bool] = False
 
 class DetallesVentas(BaseModel):
     id_detalle: Optional[int] = None
@@ -20,3 +21,17 @@ class DetallesVentas(BaseModel):
     id_producto: int
     cantidad: int
     precio_unitario: float
+
+class Deudas(BaseModel):
+    id_deuda: Optional[int] = None
+    id_venta: int
+    nombre_deudor: str
+    monto_deuda: float
+    fecha_deuda: Optional[datetime] = datetime.now()
+    pagado: Optional[bool] = False
+
+class PagosDeudas(BaseModel):
+    id_pago: Optional[int] = None
+    id_deuda: int
+    monto_pago: float
+    fecha_pago: Optional[datetime] = datetime.now()

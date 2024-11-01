@@ -32,6 +32,6 @@ class Deudas(BaseModel):
 
 class PagosDeudas(BaseModel):
     id_pago: Optional[int] = None
-    id_deuda: int
+    id_deuda: Optional[int] = None
     monto_pago: float
     fecha_pago: Optional[datetime] = datetime.now()

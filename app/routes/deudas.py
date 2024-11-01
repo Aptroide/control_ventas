@@ -37,45 +37,13 @@ def get_deudas():
 def consultar_estado_deuda(id_deuda: int):
     # Obtener los detalles de la deuda y el estado de pago
     query_deuda = """
-    SELECT nombre_deudor, monto_deuda, pagado
+    SELECT *
     FROM minimarket.deudas
     WHERE id_deuda = %s
     """
     deuda = execute_query(query_deuda, (id_deuda,), fetch="one")
     
     if not deuda:
-        raise HTTPException(status_code=404, detail="Deuda no encontrada")
-
-    # Calcular el total pagado hasta ahora
-    query_total_pagado = """
-    SELECT COALESCE(SUM(monto_pago), 0) AS total
-    FROM minimarket.pagos_parciales
-    WHERE id_deuda = %s
-    """
-    total_pagado = execute_query(query_total_pagado, (id_deuda,), fetch="one")
+        raise HTTPException(status_code=404, detail="Deuda was not found")
     
-    total_pagado = total_pagado["total"]
-    deudav = deuda["monto_deuda"]
-
-    saldo_pendiente = deudav - total_pagado
-    
-    # Obtener todos los pagos parciales realizados
-    query_pagos_parciales = """
-    SELECT id_pago, monto_pago, fecha_pago
-    FROM minimarket.pagos_parciales
-    WHERE id_deuda = %s
-    ORDER BY fecha_pago
-    """
-    pagos_parciales = execute_query(query_pagos_parciales, (id_deuda,), fetch="all")
-    
-    return {
-        "nombre_deudor": deuda["nombre_deudor"],
-        "monto_deuda": deuda["monto_deuda"],
-        "pagado": deuda["pagado"],
-        "total_pagado": total_pagado,
-        "saldo_pendiente": saldo_pendiente,
-        "pagos_parciales": [
-            {"id_pago": pago["id_pago"], "monto_pago": pago["monto_pago"], "fecha_pago": pago["fecha_pago"]}
-            for pago in pagos_parciales
-        ]
-    }
+    return deuda

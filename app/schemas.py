@@ -35,3 +35,18 @@ class PagosDeudas(BaseModel):
     id_deuda: Optional[int] = None
     monto_pago: float
     fecha_pago: Optional[datetime] = datetime.now()
+
+class User(BaseModel):
+    username: str
+    password: str
+    created_at: Optional[datetime] = datetime.now()
+
+class UserOut(BaseModel):
+    id_user: int
+    username: str
+    created_at: Optional[datetime] = datetime.now()
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+

@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status, APIRouter
+from fastapi import HTTPException, status, APIRouter, Depends
 from typing import List
-from .. import schemas
+from .. import schemas, oauth2
 from ..database import execute_query
 
 router = APIRouter(
@@ -12,7 +12,7 @@ router = APIRouter(
 # -------- Detalles_Ventas --------
 # POST /detalles_ventas
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_detalles(new_detalle: schemas.DetallesVentas):
+def create_detalles(new_detalle: schemas.DetallesVentas, user_id: int = Depends(oauth2.get_current_user)):
     query = """
     INSERT INTO minimarket.detalles_ventas (id_venta, id_producto, cantidad, precio_unitario) 
     VALUES (%s, %s, %s, %s) RETURNING id_detalle;
@@ -26,7 +26,7 @@ def create_detalles(new_detalle: schemas.DetallesVentas):
 
 # GET /detalles_ventas
 @router.get("/", response_model=List[schemas.DetallesVentas])
-def get_detalles():
+def get_detalles(user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT id_detalle, id_venta, id_producto, cantidad, precio_unitario, subtotal FROM minimarket.detalles_ventas"
     detalles = execute_query(query, 
                             (), 
@@ -36,7 +36,7 @@ def get_detalles():
 
 # GET /detalles_ventas/{id_detalle}
 @router.get("/{id_detalle}")
-def get_detalles_by_id(id_detalle: int):
+def get_detalles_by_id(id_detalle: int, user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT id_detalle, id_venta, id_producto, cantidad, precio_unitario, subtotal FROM minimarket.detalles_ventas WHERE id_detalle = %s"
     detalle = execute_query(query, 
                             (id_detalle,), 

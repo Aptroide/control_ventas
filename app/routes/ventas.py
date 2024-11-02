@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status, APIRouter
+from fastapi import HTTPException, status, APIRouter, Depends
 from typing import List
-from .. import schemas
+from .. import schemas, oauth2
 from ..database import execute_query
 
 router = APIRouter(
@@ -12,7 +12,7 @@ router = APIRouter(
 # -------- Ventas --------
 # POST /ventas
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_ventas(new_venta: schemas.Ventas):
+def create_ventas(new_venta: schemas.Ventas, user_id: int = Depends(oauth2.get_current_user)):
 
     query = """
     INSERT INTO minimarket.ventas (fecha, total, deuda) 
@@ -25,7 +25,7 @@ def create_ventas(new_venta: schemas.Ventas):
 
 # GET /ventas
 @router.get("/", response_model=List[schemas.Ventas])
-def get_ventas():
+def get_ventas(user_id: int = Depends(oauth2.get_current_user)):
     query = """
     SELECT id_venta, fecha, total, 
            COALESCE(deuda, FALSE) AS deuda 
@@ -37,7 +37,7 @@ def get_ventas():
 
 # GET /ventas/{id_venta}
 @router.get("/{id_venta}", response_model=schemas.Ventas)
-def get_ventas_by_id(id_venta: int):
+def get_ventas_by_id(id_venta: int, user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.ventas WHERE id_venta = %s"
     venta = execute_query(query, 
                             (id_venta,), 

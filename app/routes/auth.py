@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from ..database import execute_query
 from .. import schemas, utils, oauth2
@@ -8,16 +8,16 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/login")
+@router.post("/login", response_model=schemas.Token)
 def login(user_credentials: OAuth2PasswordRequestForm = Depends()):
-    
+
     query = "SELECT * FROM minimarket.users WHERE username = %s"
     user = execute_query(query, (user_credentials.username,), fetch="one")
     if not user:
-        raise HTTPException(status_code=404, detail="Invalid username or password")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid username or password")
     
     if not utils.verify(user_credentials.password, user["password"]):
-        raise HTTPException(status_code=404, detail="Invalid username or password")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid username or password")
     
     # Generate JWT token
     access_token = oauth2.create_access_token(data={"user_id": user["username"]})

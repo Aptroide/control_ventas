@@ -27,7 +27,7 @@ class Deudas(BaseModel):
     id_venta: int
     nombre_deudor: str
     monto_deuda: float
-    fecha_deuda: Optional[datetime] = datetime.now()
+    fecha_deuda: Optional[datetime]
     pagado: Optional[bool] = False
 
 class PagosDeudas(BaseModel):
@@ -50,3 +50,9 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    user_id: Optional[str]

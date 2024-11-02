@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status, APIRouter
+from fastapi import HTTPException, status, APIRouter, Depends
 from typing import List
-from .. import schemas
+from .. import schemas, oauth2
 from ..database import execute_query
 
 router = APIRouter(
@@ -9,16 +9,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# -------- Pagos --------
-@router.post("/{id_deuda}", status_code=status.HTTP_201_CREATED)
-def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas):
-    # Registrar el pago parcial en la tabla pagos_parciales
-    query_pago = """
-    INSERT INTO minimarket.pagos_parciales (id_deuda, monto_pago) 
-    VALUES (%s, %s) RETURNING id_pago;
-    """
-    pago_id = execute_query(query_pago, (id_deuda, monto_pago.monto_pago), fetch="one")
-    
+def hay_deuda(id_deuda: int):
     # Calcular el monto total pagado hasta ahora para la deuda
     query_total_pagado = """
     SELECT COALESCE(SUM(monto_pago), 0) AS total
@@ -31,34 +22,61 @@ def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas):
     query_deuda = "SELECT monto_deuda FROM minimarket.deudas WHERE id_deuda = %s"
     monto_deuda = execute_query(query_deuda, (id_deuda,), fetch="one")
     monto_deuda = monto_deuda["monto_deuda"]
-    
-    # Verificar si la deuda está completamente pagada
+
+    return monto_deuda, total_pagado
+
+# -------- Pagos --------
+@router.post("/{id_deuda}", status_code=status.HTTP_201_CREATED)
+def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas, user_id: int = Depends(oauth2.get_current_user)):
+
+    monto_deuda, total_pagado = hay_deuda(id_deuda)
+
+    print(total_pagado)
+    print(monto_deuda)
+
+    # Verificar si la deuda ya está pagada
     if total_pagado >= monto_deuda:
-        # Marcar la deuda como pagada y la venta como no deuda
-        query_update_deuda = "UPDATE minimarket.deudas SET pagado = %s WHERE id_deuda = %s"
-        query_update_venta = "UPDATE minimarket.ventas SET deuda = %s WHERE id_venta = %s"
-
-        query_id_venta = "SELECT id_venta FROM minimarket.deudas WHERE id_deuda = %s"
-        id_venta = execute_query(query_id_venta, (id_deuda,), fetch="one")
-
-        execute_query(query_update_deuda, (True, id_deuda,), fetch="None")
-        execute_query(query_update_venta, (False, id_venta["id_venta"],), fetch="None")
-
-        return {"id_pago": pago_id["id_pago"], "message": "Pago completo registrado exitosamente", "total_pagado": total_pagado}
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Deuda is already paid")
     else:
-        return {"id_pago": pago_id["id_pago"], "message": "Pago parcial registrado exitosamente", "total_pagado": total_pagado}
+        # Registrar el pago parcial en la tabla pagos_parciales
+        query_pago = """
+        INSERT INTO minimarket.pagos_parciales (id_deuda, monto_pago) 
+        VALUES (%s, %s) RETURNING id_pago;
+        """
+        pago_id = execute_query(query_pago, (id_deuda, monto_pago.monto_pago), fetch="one")
+        
+        if "violates foreign key constraint" in str(pago_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deuda was not Found.")
+        
+        monto_deuda, total_pagado = hay_deuda(id_deuda)
+        
+        # Verificar si la deuda está completamente pagada
+        if total_pagado >= monto_deuda:
+            # Marcar la deuda como pagada y la venta como no deuda
+            query_update_deuda = "UPDATE minimarket.deudas SET pagado = %s WHERE id_deuda = %s"
+            query_update_venta = "UPDATE minimarket.ventas SET deuda = %s WHERE id_venta = %s"
+
+            query_id_venta = "SELECT id_venta FROM minimarket.deudas WHERE id_deuda = %s"
+            id_venta = execute_query(query_id_venta, (id_deuda,), fetch="one")
+
+            execute_query(query_update_deuda, (True, id_deuda,), fetch="None")
+            execute_query(query_update_venta, (False, id_venta["id_venta"],), fetch="None")
+
+            return {"id_pago": pago_id["id_pago"], "message": "Pago completo registrado exitosamente", "total_pagado": total_pagado}
+        else:
+            return {"id_pago": pago_id["id_pago"], "message": "Pago parcial registrado exitosamente", "total_pagado": total_pagado}
 
 
 # GET /pagos
 @router.get("/", response_model=List[schemas.PagosDeudas])
-def get_pagos_parciales():
+def get_pagos_parciales(user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.pagos_parciales"
     pagos = execute_query(query, (), fetch="all")
     return pagos
 
 # GET /pagos y id
 @router.get("/{id_pago}")
-def get_pago_parcial_by_id(id_pago: int):
+def get_pago_parcial_by_id(id_pago: int, user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.pagos_parciales WHERE id_pago = %s"
     pago = execute_query(query, (id_pago,), fetch="one")
     if not pago:
@@ -67,7 +85,7 @@ def get_pago_parcial_by_id(id_pago: int):
 
 # PUT /pagos y id
 @router.put("/{id_pago}")
-def update_pago_parcial(id_pago: int, monto_pago: schemas.PagosDeudas):
+def update_pago_parcial(id_pago: int, monto_pago: schemas.PagosDeudas, user_id: int = Depends(oauth2.get_current_user)):
     # Actualizar el monto del pago parcial
     query = """
     UPDATE minimarket.pagos_parciales SET monto_pago = %s 

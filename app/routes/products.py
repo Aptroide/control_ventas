@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status, APIRouter
+from fastapi import HTTPException, status, APIRouter, Depends
 from typing import List
-from .. import schemas
+from .. import schemas, oauth2
 from ..database import execute_query
 
 router = APIRouter(
@@ -12,7 +12,7 @@ router = APIRouter(
 # -------- Productos --------
 # POST /productos
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_product(new_producto: schemas.Producto):
+def create_product(new_producto: schemas.Producto, user_id: int = Depends(oauth2.get_current_user)):
     query = """
     INSERT INTO minimarket.productos (nombre, precio, codigo_qr) 
     VALUES (%s, %s, %s) RETURNING id_producto;
@@ -27,7 +27,7 @@ def create_product(new_producto: schemas.Producto):
 
 # GET /productos
 @router.get("/", response_model=List[schemas.Producto])
-def get_products():
+def get_products(user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.productos"
     products = execute_query(query, 
                             ( ), 
@@ -37,7 +37,7 @@ def get_products():
 
 # GET /productos/{id_producto}
 @router.get("/{id_producto}", response_model=schemas.Producto)
-def get_product_by_id(id_producto: int):
+def get_product_by_id(id_producto: int, user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.productos WHERE id_producto = %s"
     product = execute_query(query, 
                             (id_producto, ), 
@@ -49,7 +49,7 @@ def get_product_by_id(id_producto: int):
     
 # PUT /productos/{id_producto}
 @router.put("/{id_producto}") #, response_model=schemas.Producto
-def update_product(id_producto: int, product: schemas.Producto):
+def update_product(id_producto: int, product: schemas.Producto, user_id: int = Depends(oauth2.get_current_user)):
     query = """
     UPDATE minimarket.productos
     SET nombre = %s, precio = %s, codigo_qr = %s
@@ -70,7 +70,7 @@ def update_product(id_producto: int, product: schemas.Producto):
     
 # DELETE /productos/{id_producto}
 @router.delete("/{id_producto}")
-def delete_product(id_producto: int):
+def delete_product(id_producto: int, user_id: int = Depends(oauth2.get_current_user)):
     query = "DELETE FROM minimarket.productos WHERE id_producto = %s RETURNING id_producto, nombre;"
     deleted_product = execute_query(query, 
                                     (id_producto, ), 

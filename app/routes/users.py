@@ -1,5 +1,5 @@
-from fastapi import status, APIRouter, HTTPException
-from .. import schemas, utils
+from fastapi import status, APIRouter, HTTPException, Depends
+from .. import schemas, utils, oauth2
 from ..database import execute_query
 
 
@@ -11,7 +11,7 @@ router = APIRouter(
 
 # -------- Users --------
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def create_user(new_user: schemas.User):
+def create_user(new_user: schemas.User, user_id: int = Depends(oauth2.get_current_user)):
 
     new_user.password = utils.hash(new_user.password)
 
@@ -28,7 +28,7 @@ def create_user(new_user: schemas.User):
     return user_id
 
 @router.get("/{id_user}", response_model=schemas.UserOut)
-def get_user_by_id(id_user: int):
+def get_user_by_id(id_user: int, user_id: int = Depends(oauth2.get_current_user)):
     query = "SELECT id_user, username, created_at FROM minimarket.users WHERE id_user = %s"
     user = execute_query(query, 
                             (id_user, ), 

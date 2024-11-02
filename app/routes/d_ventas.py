@@ -12,7 +12,7 @@ router = APIRouter(
 # -------- Detalles_Ventas --------
 # POST /detalles_ventas
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_detalles(new_detalle: schemas.DetallesVentas, user_id: int = Depends(oauth2.get_current_user)):
+def create_detalles(new_detalle: schemas.DetallesVentas, current_user: int = Depends(oauth2.get_current_user)):
     query = """
     INSERT INTO minimarket.detalles_ventas (id_venta, id_producto, cantidad, precio_unitario) 
     VALUES (%s, %s, %s, %s) RETURNING id_detalle;
@@ -26,8 +26,17 @@ def create_detalles(new_detalle: schemas.DetallesVentas, user_id: int = Depends(
 
 # GET /detalles_ventas
 @router.get("/", response_model=List[schemas.DetallesVentas])
-def get_detalles(user_id: int = Depends(oauth2.get_current_user)):
-    query = "SELECT id_detalle, id_venta, id_producto, cantidad, precio_unitario, subtotal FROM minimarket.detalles_ventas"
+def get_detalles(current_user: int = Depends(oauth2.get_current_user), id_venta: int = None):
+
+    query = "SELECT * FROM minimarket.detalles_ventas"
+    
+    if id_venta:
+        query = "SELECT * FROM minimarket.detalles_ventas WHERE id_venta = %s"
+        detalles = execute_query(query, 
+                                (id_venta,), 
+                                fetch="all")
+        return detalles
+
     detalles = execute_query(query, 
                             (), 
                             fetch="all")
@@ -36,8 +45,8 @@ def get_detalles(user_id: int = Depends(oauth2.get_current_user)):
 
 # GET /detalles_ventas/{id_detalle}
 @router.get("/{id_detalle}")
-def get_detalles_by_id(id_detalle: int, user_id: int = Depends(oauth2.get_current_user)):
-    query = "SELECT id_detalle, id_venta, id_producto, cantidad, precio_unitario, subtotal FROM minimarket.detalles_ventas WHERE id_detalle = %s"
+def get_detalles_by_id(id_detalle: int, current_user: int = Depends(oauth2.get_current_user)):
+    query = "SELECT * FROM minimarket.detalles_ventas WHERE id_detalle = %s"
     detalle = execute_query(query, 
                             (id_detalle,), 
                             fetch="one")

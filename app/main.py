@@ -1,8 +1,11 @@
-from fastapi import FastAPI, HTTPException, status, Body
-from typing import List
-from . import schemas
-from .database import get_db_connection, execute_query
+from fastapi import FastAPI
 from .routes import products, ventas, d_ventas, deudas, pagos, legado, users, auth
+from .config import settings
+
+
+
+
+
 app = FastAPI()
 
 app.include_router(products.router)

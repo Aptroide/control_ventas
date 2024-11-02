@@ -12,7 +12,7 @@ router = APIRouter(
 # -------- Deudas --------
 # POST /deuda
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_deuda(new_deuda: schemas.Deudas, user_id: int = Depends(oauth2.get_current_user)):
+def create_deuda(new_deuda: schemas.Deudas, current_user: int = Depends(oauth2.get_current_user)):
 
     query = """
     INSERT INTO minimarket.deudas (id_venta, nombre_deudor, monto_deuda ) 
@@ -25,7 +25,7 @@ def create_deuda(new_deuda: schemas.Deudas, user_id: int = Depends(oauth2.get_cu
 
 # GET /deudas
 @router.get("/", response_model=List[schemas.Deudas])
-def get_deudas(user_id: int = Depends(oauth2.get_current_user)):
+def get_deudas(current_user: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.deudas"
     deudas = execute_query(query, 
                             (), 
@@ -34,7 +34,7 @@ def get_deudas(user_id: int = Depends(oauth2.get_current_user)):
 
 # GET /deudas y id
 @router.get("/{id_deuda}")
-def consultar_estado_deuda(id_deuda: int, user_id: int = Depends(oauth2.get_current_user)):
+def consultar_estado_deuda(id_deuda: int, current_user: int = Depends(oauth2.get_current_user)):
     # Obtener los detalles de la deuda y el estado de pago
     query_deuda = """
     SELECT *

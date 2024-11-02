@@ -27,12 +27,9 @@ def hay_deuda(id_deuda: int):
 
 # -------- Pagos --------
 @router.post("/{id_deuda}", status_code=status.HTTP_201_CREATED)
-def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas, user_id: int = Depends(oauth2.get_current_user)):
+def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas, current_user: int = Depends(oauth2.get_current_user)):
 
     monto_deuda, total_pagado = hay_deuda(id_deuda)
-
-    print(total_pagado)
-    print(monto_deuda)
 
     # Verificar si la deuda ya está pagada
     if total_pagado >= monto_deuda:
@@ -69,14 +66,14 @@ def registrar_pago_parcial(id_deuda: int, monto_pago: schemas.PagosDeudas, user_
 
 # GET /pagos
 @router.get("/", response_model=List[schemas.PagosDeudas])
-def get_pagos_parciales(user_id: int = Depends(oauth2.get_current_user)):
+def get_pagos_parciales(current_user: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.pagos_parciales"
     pagos = execute_query(query, (), fetch="all")
     return pagos
 
 # GET /pagos y id
 @router.get("/{id_pago}")
-def get_pago_parcial_by_id(id_pago: int, user_id: int = Depends(oauth2.get_current_user)):
+def get_pago_parcial_by_id(id_pago: int, current_user: int = Depends(oauth2.get_current_user)):
     query = "SELECT * FROM minimarket.pagos_parciales WHERE id_pago = %s"
     pago = execute_query(query, (id_pago,), fetch="one")
     if not pago:
@@ -85,7 +82,7 @@ def get_pago_parcial_by_id(id_pago: int, user_id: int = Depends(oauth2.get_curre
 
 # PUT /pagos y id
 @router.put("/{id_pago}")
-def update_pago_parcial(id_pago: int, monto_pago: schemas.PagosDeudas, user_id: int = Depends(oauth2.get_current_user)):
+def update_pago_parcial(id_pago: int, monto_pago: schemas.PagosDeudas, current_user: int = Depends(oauth2.get_current_user)):
     # Actualizar el monto del pago parcial
     query = """
     UPDATE minimarket.pagos_parciales SET monto_pago = %s 
@@ -96,18 +93,7 @@ def update_pago_parcial(id_pago: int, monto_pago: schemas.PagosDeudas, user_id: 
         raise HTTPException(status_code=404, detail="Pago no encontrado")
     id_deuda = pago_id["id_deuda"]
 
-    # Calcular el monto total pagado hasta ahora para la deuda
-    query_total_pagado = """
-    SELECT COALESCE(SUM(monto_pago), 0) AS total
-    FROM minimarket.pagos_parciales
-    WHERE id_deuda = %s
-    """
-    total_pagado = execute_query(query_total_pagado, (id_deuda,), fetch="one")
-    total_pagado = total_pagado["total"]
-    # Obtener el monto original de la deuda
-    query_deuda = "SELECT monto_deuda, id_venta FROM minimarket.deudas WHERE id_deuda = %s"
-    monto_deuda = execute_query(query_deuda, (id_deuda,), fetch="one")
-    monto_deuda = monto_deuda["monto_deuda"]
+    monto_deuda, total_pagado = hay_deuda(id_deuda)
     
     # Obtener id de la venta
     query_id_venta = "SELECT id_venta FROM minimarket.deudas WHERE id_deuda = %s"

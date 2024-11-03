@@ -1,10 +1,5 @@
 from fastapi import FastAPI
 from .routes import products, ventas, d_ventas, deudas, pagos, legado, users, auth
-from .config import settings
-
-
-
-
 
 app = FastAPI()
 
@@ -19,4 +14,4 @@ app.include_router(auth.router)
         
 @app.get("/")
 def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello API"}

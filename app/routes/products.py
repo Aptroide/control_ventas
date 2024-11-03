@@ -47,6 +47,18 @@ def get_product_by_id(id_producto: int, current_user: int = Depends(oauth2.get_c
     else:
         return product
     
+# GET /productos/{qr_producto}
+@router.get("/qr/{qr_producto}", response_model=schemas.Producto)
+def get_product_by_id(qr_producto: int, current_user: int = Depends(oauth2.get_current_user)):
+    query = "SELECT * FROM minimarket.productos WHERE codigo_qr = '%s'"
+    product = execute_query(query, 
+                            (qr_producto, ), 
+                            fetch="one")
+    if not product:
+        raise HTTPException(status_code=404, detail=f"Product with qr {qr_producto} not found")
+    else:
+        return product
+    
 # PUT /productos/{id_producto}
 @router.put("/{id_producto}") #, response_model=schemas.Producto
 def update_product(id_producto: int, product: schemas.Producto, current_user: int = Depends(oauth2.get_current_user)):

@@ -58,7 +58,7 @@ jobs:
           file: ./Dockerfile
           builder: ${{ secrets.buildx.outputs.name }}
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USER_NAME }}/minimarketapi:V2
+          tags: ${{ secrets.DOCKER_HUB_USER_NAME }}/minimarketapi:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       - name: Imge digest

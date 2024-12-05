@@ -56,3 +56,12 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[str]
+
+class PredictionRequest(BaseModel):
+    fecha: datetime
+
+class PredictionResponse(BaseModel):
+    ds: datetime
+    yhat: float
+    yhat_lower: float
+    yhat_upper: float

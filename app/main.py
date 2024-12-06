@@ -31,4 +31,4 @@ app.include_router(prediction.router)
 
 @app.get("/")
 def root():
-    return {"message": "Hello World deployed  from CI/CD with Github Actions"} 
+    return {"message": "Ruta nueva deployed  from CI/CD with Github Actions"} 

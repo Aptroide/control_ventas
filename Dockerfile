@@ -10,9 +10,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN ls -l /usr/src/app/ && cat /usr/src/app/prophet_model.pkl 2>/dev/null || echo "No se encontró el archivo"
-
 # Copy the model file into a specific directory within the container
-# COPY prophet_model.pkl /usr/src/app/prophet_model.pkl
+COPY prophet_model.pkl /usr/src/app/
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

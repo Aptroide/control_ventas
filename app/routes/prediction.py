@@ -13,8 +13,12 @@ router = APIRouter(
 )
 
 # Cargar el modelo al iniciar
-with open('/usr/src/app/prophet_model.pkl', 'rb') as f:
-    model = pickle.load(f)
+try:
+    with open('/usr/src/app/prophet_model.pkl', 'rb') as f:
+        model = pickle.load(f)
+except FileNotFoundError:
+    with open('../prophet_model.pkl', 'rb') as f:
+        model = pickle.load(f)
 
 @router.post("/", response_model=schemas.PredictionResponse)
 def make_prediction(pred_request: schemas.PredictionRequest):

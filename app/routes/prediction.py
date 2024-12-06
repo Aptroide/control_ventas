@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 # Cargar el modelo al iniciar
-with open('/usr/src/app/models/prophet_model.pkl', 'rb') as f:
+with open('/usr/src/app/prophet_model.pkl', 'rb') as f:
     model = pickle.load(f)
 
 @router.post("/", response_model=schemas.PredictionResponse)

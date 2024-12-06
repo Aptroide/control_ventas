@@ -31,4 +31,4 @@ app.include_router(prediction.router)
 
 @app.get("/")
 def root():
-    return {"message": "Estoy cansdado jefe  from CI/CD with Github Actions"} 
+    return {"message": "Machine Learning Final Proyect"} 

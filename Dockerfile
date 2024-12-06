@@ -11,6 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 # Copy the model file into a specific directory within the container
-COPY prophet_model.pkl /usr/src/app/models/prophet_model.pkl
+COPY prophet_model.pkl /usr/src/app/prophet_model.pkl
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

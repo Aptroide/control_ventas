@@ -5,6 +5,8 @@ import pickle
 import pandas as pd
 from datetime import datetime
 from .. import schemas
+import os
+
 
 router = APIRouter(
     prefix="/predict",
@@ -14,11 +16,12 @@ router = APIRouter(
 
 # Cargar el modelo al iniciar
 try:
-    with open('/usr/src/app/prophet_model.pkl', 'rb') as f:
+    # Cargar el modelo al iniciar
+    model_path = os.path.join(os.path.dirname(__file__), 'prophet_model.pkl')
+    with open(model_path, 'rb') as f:
         model = pickle.load(f)
 except FileNotFoundError:
-    with open('../prophet_model.pkl', 'rb') as f:
-        model = pickle.load(f)
+    pass
 
 @router.post("/", response_model=schemas.PredictionResponse)
 def make_prediction(pred_request: schemas.PredictionRequest):

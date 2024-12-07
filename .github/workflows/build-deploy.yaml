@@ -56,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./
-          file: ./app/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USER_NAME }}/minimarketapi:herokuV3
           cache-from: type=local,src=/tmp/.buildx-cache

@@ -58,11 +58,11 @@ export class AppComponent {
 
       forkJoin({
         week: this.weekPredict(this.selectedDate),
-        month: this.monthPredict(this.selectedDate)
+        // month: this.monthPredict(this.selectedDate)
       }).subscribe({
-        next: ({ week, month }) => {
-          this.predictionSemana = week.toFixed(2);
-          this.predictionMes = month.toFixed(2);
+        next: ({ week }) => {
+          // this.predictionSemana = week.toFixed(2);
+          // this.predictionMes = month.toFixed(2);
 
           this.showCards = true;
           this.hideElement = false;

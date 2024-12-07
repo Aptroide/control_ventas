@@ -13,7 +13,7 @@ with open(model_path, "rb") as f:
     model = pickle.load(f)
 
 router = APIRouter(
-    prefix="/api/predict",
+    prefix="/predict",
     tags=["predicción"],
     responses={404: {"description": "No encontrado"}},
 )

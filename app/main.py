@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from .routes import products, ventas, d_ventas, deudas, pagos, legado, users, auth, prediction
 from fastapi.middleware.cors import CORSMiddleware
+from decouple import config
 
 app = FastAPI()
 
 # Configuración de CORS
 origins = [
     "http://localhost:4200",
-    # Agrega más orígenes si es necesario
+    config('FRONTEND_URL')
 ]
 
 app.add_middleware(

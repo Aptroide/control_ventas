@@ -22,12 +22,12 @@
     <mat-card class="custom-card" appearance="outlined">
       <mat-card-header>
         <div mat-card-avatar class="example-header-image"></div>
-        <mat-card-title>Prediction 1</mat-card-title>
+        <mat-card-title>Week Prediction</mat-card-title>
         <mat-card-subtitle class="sub-font">(Do not trust this)</mat-card-subtitle>
       </mat-card-header>
       <img mat-card-image src="assets/Strategi-Minimarket.jpg" alt="Image 1" class="fixed-size-image-sides">
       <mat-card-content>
-        <p class="custom-font-pred">{{ prediction1 }}</p>
+        <p class="custom-font-pred">{{ predictionSemana }}</p>
       </mat-card-content>
     </mat-card>
 
@@ -37,7 +37,7 @@
         <mat-card-title>Prediction</mat-card-title>
         <mat-card-subtitle class="sub-font">(Do not trust this)</mat-card-subtitle>
       </mat-card-header>
-      <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu" class="fixed-size-image">
+      <img mat-card-image src="assets/tienda.png" alt="Photo of a Shiba Inu" class="fixed-size-image">
       <mat-card-content>
         <p class="custom-font-pred">{{ prediction }}</p>
       </mat-card-content>
@@ -46,12 +46,12 @@
     <mat-card class="custom-card" appearance="outlined">
       <mat-card-header>
         <div mat-card-avatar class="example-header-image"></div>
-        <mat-card-title>Prediction 2</mat-card-title>
+        <mat-card-title>Month Prediction</mat-card-title>
         <mat-card-subtitle class="sub-font">(Do not trust this)</mat-card-subtitle>
       </mat-card-header>
       <img mat-card-image src="assets/minimarket-2-1.webp" alt="Image 2" class="fixed-size-image-sides">
       <mat-card-content>
-        <p class="custom-font-pred">{{ prediction2 }}</p>
+        <p class="custom-font-pred">{{ predictionMes }}</p>
       </mat-card-content>
     </mat-card>
   </div>
@@ -59,4 +59,15 @@
 
 <div class="button-new-pred" *ngIf="showCards">
   <button mat-raised-button (click)="newPredict()">Make a new Predict</button>
+</div>
+
+<div *ngIf="isLoading" class="loading-spinner">
+  Cargando predicciones...
+</div>
+
+<div *ngIf="!isLoading">
+  <!-- Tu contenido existente -->
+  <div *ngIf="showCards">
+    <!-- Tarjetas de predicción -->
+  </div>
 </div>

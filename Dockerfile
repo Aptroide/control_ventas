@@ -21,13 +21,20 @@ FROM node:18 AS build-frontend
 WORKDIR /usr/src/app/frontend
 
 # Copiar los archivos de Angular
-COPY frontend/package*.json ./
+COPY frontend/package.json ./
 
-# Instalar dependencias del frontend
+# Instalar dependencias de Angular
 RUN npm install
 
-# Construir la aplicación Angular en modo producción
+# Copiar el código de Angular
+COPY . .
+
+# Construir la aplicación de Angular
 RUN npm run build --prod
+
+FROM nginx:1.21.3
+
+COPY --from=build-frontend /usr/src/app/frontend/dist/frontend /usr/share/nginx/html
 
 # Etapa 2: Construcción del backend (API)
 FROM python:3.11.2 AS build-backend
@@ -47,16 +54,6 @@ COPY . .
 # Copiar los archivos construidos de Angular (etapa 1) al backend
 COPY --from=build-frontend /usr/src/app/frontend/dist /usr/src/app/frontend/dist
 
-# Etapa 3: Servir el backend y frontend
-
-# Instalar nginx para servir el frontend
-RUN apt-get update && apt-get install -y nginx
-
-# Configurar nginx para servir los archivos estáticos
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Exponer el puerto para el frontend y el backend
-EXPOSE 80 8000
 
 # Comando para arrancar la API y nginx
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 & nginx -g 'daemon off;'"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

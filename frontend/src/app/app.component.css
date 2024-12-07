@@ -1,0 +1,201 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .banner {
+    background: linear-gradient(270deg, #e84439, #ff8c00, #e84439);
+    background-size: 600% 600%;
+    animation: gradientAnimation 10s ease infinite;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 30px;
+  }
+  
+  @keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+.custom-font {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 30px;
+  padding-left: 10px;
+}
+
+.logo {
+  width: 300px;
+  height: 110px;
+  padding-right: 10px;
+}
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  margin-top: 10px;
+}
+* {
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: 200;
+}
+
+dd {
+  font-weight: bold;
+}
+
+.button-new-pred {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px; /* Ajusta el margen superior según tus necesidades */
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    animation: bounce 2s infinite;
+    transition: transform 0.3s ease;
+    overflow: hidden; /* Prevents horizontal growth */
+}
+
+.button-new-pred:hover {
+    transform: scale(1.1);
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px; /* Ajusta el margen superior según tus necesidades */
+}
+
+.example-card {
+  max-width: 400px;
+}
+
+.example-header-image {
+  background-image: url("https://material.angular.io/assets/img/examples/shiba1.jpg");
+  background-size: cover;
+    width: 50px;
+    height: 50px;
+}
+
+p {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.card-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 10px;
+  gap: 100px;
+}
+
+.custom-card {
+    background-color: #ffffff; /* Cambia esto al color de fondo que prefieras #cecece */
+    margin: 10px;
+    position: relative;
+    border-radius: 30px;
+}
+
+@property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+.custom-card::after, .custom-card::before{
+    content: "";
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    height: calc(100% + 10px);
+    width: calc(100% + 10px);
+    background: conic-gradient(from var(--angle), transparent 13%,#006aff);/* #00ff99, #006aff, #6f4a48 ,#00ff99, #006aff, #ff4545 );*/
+    border-radius: 35px;
+    z-index: -1;
+    animation: 3s spin linear infinite;
+}
+
+.custom-card::before {
+    filter: blur(1.5rem);
+    opacity: 0.9;
+}
+@keyframes spin {
+    from {
+        --angle: 0deg;
+    }
+    to{
+        --angle: 360deg;
+    }
+}
+
+.fixed-size-image-sides {
+  width: 450px;
+  height: 370px;
+  object-fit: cover; /* Asegura que la imagen se ajuste al tamaño sin distorsionarse */
+}
+.fixed-size-image {
+  width: 550px;
+  height: 480px;
+  object-fit: cover; /* Asegura que la imagen se ajuste al tamaño sin distorsionarse */
+}
+
+.pred-container {
+  color: #e84439;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px; /* Ajusta el margen superior según tus necesidades */
+}
+
+.custom-font-pred {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 30px;
+  padding-left: 20px;
+  text-align: center;
+  display: block;
+  /* margin: 0 auto;  */
+  margin-top: 20px;
+}
+
+.sub-font {
+  color: black;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 20px;
+  padding-left: 10px;
+  text-align: center;
+  display: block;
+  margin: 0 auto;
+}
+
+.pred-font{
+    font-size: 30px;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+}
